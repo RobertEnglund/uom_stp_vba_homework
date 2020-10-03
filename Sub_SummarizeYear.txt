@@ -26,6 +26,7 @@ Dim currentWS As Worksheet
 '   - Print last ticker after exiting For loop
 '
     
+
 ' *********** beginning of loop through worksheets
     For Each currentWS In Worksheets
         currentWS.Activate

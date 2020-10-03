@@ -8,6 +8,8 @@ Files in this repository
 
 Not included:  source data - go to uofm-stp-data-pt-09-2020-u-c/02-Homework/02-VBA-Scripting... to get
 
+(added comment:  orginal push to github had inaccurate date - 10 Oct 2020.   Doesn't look like I can update, so making update to readme and pushing back up with corrected comment - even though github has datestamp that will do the same thing.)
+
 Assignment:
 
 # VBA Homework - The VBA of Wall Street
