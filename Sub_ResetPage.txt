@@ -1,0 +1,15 @@
+Sub ResetPage()
+'
+'  Reset tabs to initial state
+'
+    
+Dim currentWS As Worksheet
+
+    For Each currentWS In Worksheets
+        currentWS.Activate
+        Range("I:L").Value = ""
+        Range("J:J").FormatConditions.Delete
+        Range("O1:Q4").Value = ""
+    Next
+    
+End Sub

@@ -1,0 +1,196 @@
+Sub SummarizeYear()
+
+Dim i, lastRow, outputRow As Long
+Dim currengTicker As String
+Dim openDate As Long
+Dim closeDate As Long
+Dim openPrice, closePrice, priceChange As Double
+Dim percentChange As Double
+Dim giTicker, gdTicker, gvTicker As String
+Dim giPercent, gdPercent, gvUnits As Double
+Dim totalVolume As Double
+Dim cond1 As FormatCondition
+Dim cond2 As FormatCondition
+Dim currentWS As Worksheet
+
+'
+'   Assumptions:
+'   1. There is only one row for each ticker/date combination
+'   2. Data for each ticker is grouped together
+'   3. Data is not necessarily in date order within ticker
+'   4. There is more than 1 row for the first ticker
+'
+'   Approach:
+'   - Check current row (not next row) for change of value
+'   - Initialize first ticker before entering For loop
+'   - Print last ticker after exiting For loop
+'
+    
+' *********** beginning of loop through worksheets
+    For Each currentWS In Worksheets
+        currentWS.Activate
+' ************************************************
+    
+'   Find last row in raw data; set first row for summary output
+    
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    outputRow = 2
+    
+'   Cell formatting
+'   - Show Percent Change as percent
+    Range("K:K").NumberFormat = "0.00%"
+    
+'   - Conditional formatting for Yearly Change
+    Set cond1 = Range("J:J").FormatConditions.Add(xlCellValue, xlGreater, 0)
+    Set cond2 = Range("J:J").FormatConditions.Add(xlCellValue, xlLess, 0)
+    
+    With cond1
+        .Interior.Color = vbGreen
+    End With
+    With cond2
+        .Interior.Color = vbRed
+    End With
+    
+'   - Remove conditional formatting from heading
+    Range("J1").FormatConditions.Delete
+    
+    
+'   Add Summary headings
+    Cells(1, 9).Value = "Ticker"
+    Cells(1, 10).Value = "Yearly Change"
+    Cells(1, 11).Value = "Percent Change"
+    Cells(1, 12).Value = "Total Stock Volume"
+    
+'   Initialize first ticker
+'   *** OBS!  Same code - basically - exists within For loop below - opportunity to eliminate redundant code and reduce opportunity for error
+    currentTicker = Cells(2, 1).Value
+    openDate = Cells(2, 2).Value
+    closeDate = Cells(2, 2).Value
+    openPrice = Cells(2, 3).Value
+    closePrice = Cells(2, 6).Value
+    totalVolume = Cells(2, 7).Value
+
+'   Initialize "greatest" variables
+'   Note: this approach assumes more than one entry for the first ticker
+    giTicker = ""
+    gdTicker = ""
+    gvTicker = ""
+    
+    giPercent = 0
+    gdPercent = 0
+    gvUnits = 0
+
+
+' Summarize raw open and close data
+    For i = 3 To lastRow
+        
+        If Cells(i, 1) <> currentTicker Then
+'   New ticker:
+'   - Print summary for prev ticker
+            
+            Cells(outputRow, 9).Value = currentTicker
+            
+            priceChange = closePrice - openPrice
+            Cells(outputRow, 10).Value = priceChange
+            If openPrice = 0 Then
+                percentChange = 0
+            Else
+                percentChange = priceChange / openPrice
+            End If
+                Cells(outputRow, 11).Value = percentChange
+            
+            Cells(outputRow, 12).Value = totalVolume
+
+'   - Check for "greatest" values for 2nd summary table
+            If percentChange > giPercent Then
+                giTicker = currentTicker
+                giPercent = percentChange
+            ElseIf percentChange < gdPercent Then
+                gdTicker = currentTicker
+                gdPercent = percentChange
+            End If
+            
+            If totalVolume > gvUnits Then
+                gvTicker = currentTicker
+                gvUnits = totalVolume
+            End If
+            
+'   - Initialize new ticker
+            outputRow = outputRow + 1
+            priceChange = 0
+                        
+            currentTicker = Cells(i, 1).Value
+            openDate = Cells(i, 2).Value
+            closeDate = Cells(i, 2).Value
+            openPrice = Cells(i, 3).Value
+            closePrice = Cells(i, 6).Value
+            totalVolume = Cells(i, 7).Value
+        
+        Else
+'   Same ticker: Increment total volume and determine whether this is first (open) or last (close) date
+            
+            totalVolume = totalVolume + Cells(i, 7).Value
+            If openDate > Cells(i, 2).Value Then
+                openDate = Cells(i, 2).Value
+                openPrice = Cells(i, 3).Value
+            Else
+                If closeDate < Cells(i, 2).Value Then
+                    closeDate = Cells(i, 2).Value
+                    closePrice = Cells(i, 6).Value
+                End If
+            End If
+        
+        End If
+        
+    Next i
+    
+'   Last ticker:  Print summary
+'   *** OBS!  Same code exists within For loop above - opportunity to eliminate redundant code and reduce opportunity for error
+    Cells(outputRow, 9).Value = currentTicker
+    priceChange = closePrice - openPrice
+    Cells(outputRow, 10).Value = priceChange
+    If openPrice = 0 Then
+        percentChange = 0
+    Else
+        percentChange = priceChange / openPrice
+    End If
+    Cells(outputRow, 11).Value = percentChange
+    Cells(outputRow, 12).Value = totalVolume
+
+'   - Check for "greatest" values for 2nd summary table
+'   *** OBS!  Same code exists within For loop above - opportunity to eliminate redundant code and reduce opportunity for error
+    If percentChange > giPercent Then
+        giTicker = currentTicker
+        giPercent = percentChange
+    ElseIf percentChange < gdPercent Then
+        gdTicker = currentTicker
+        gdPercent = percentChange
+    End If
+            
+    If totalVolume > gvUnits Then
+        gvTicker = currentTicker
+        gvUnits = totalVolume
+    End If
+
+'   Print second summary table
+    Cells(1, 16).Value = "Ticker"
+    Cells(1, 17).Value = "Value"
+    Cells(2, 15).Value = "Greatest % Increase"
+    Cells(2, 16).Value = giTicker
+    Cells(2, 17).Value = giPercent
+    Cells(2, 17).NumberFormat = "0.00%"
+    
+    Cells(3, 15).Value = "Greatest % Decrease"
+    Cells(3, 16).Value = gdTicker
+    Cells(3, 17).Value = gdPercent
+    Cells(3, 17).NumberFormat = "0.00%"
+    
+    Cells(4, 15).Value = "Greatest Total Volume"
+    Cells(4, 16).Value = gvTicker
+    Cells(4, 17).Value = gvUnits
+    
+' *********** end of loop through worksheets *****
+    Next
+' ************************************************
+
+End Sub
